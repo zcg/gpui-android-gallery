@@ -11,6 +11,18 @@
 一个跑在 Android 上的 GPUI 组件展示应用。它把 [`gpui-fusion`](https://github.com/cradiy/gpui-fusion)
 里可用的控件和视觉效果集中到七个页面里，用来在真机上手感体验、对照渲染效果、观察帧率。
 
+### 界面预览
+
+真机（1080×2340）上的四个页面：
+
+| Basics | Controls | Glass | Feedback |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/android-basics.jpg" width="180" /> | <img src="docs/screenshots/android-controls.jpg" width="180" /> | <img src="docs/screenshots/android-glass.jpg" width="180" /> | <img src="docs/screenshots/android-feedback.jpg" width="180" /> |
+
+桌面端（可以正常使用，界面按手机竖屏比例排版）：
+
+<img src="docs/screenshots/desktop.png" width="760" />
+
 这个仓库不包含 GPUI 本身，只包含应用层代码（约 1600 行 `src/main.rs`），
 通过 [`gpuiforge`](https://github.com/cradiy/gpuiforge) 生成 Android 壳工程并构建安装。
 
@@ -161,6 +173,15 @@ adb -s <serial> shell input tap <x> <y>
 A GPUI component gallery that runs on Android. It gathers the widgets and visual effects
 available in [`gpui-fusion`](https://github.com/cradiy/gpui-fusion) into seven pages so the
 touch behaviour, rendering, and frame rate can be judged on a real device.
+
+### Screenshots
+
+The four pages below are from a phone at 1080×2340; the full row is in the preview section
+above, together with a desktop capture.
+
+| Basics | Controls | Glass | Feedback |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/android-basics.jpg" width="180" /> | <img src="docs/screenshots/android-controls.jpg" width="180" /> | <img src="docs/screenshots/android-glass.jpg" width="180" /> | <img src="docs/screenshots/android-feedback.jpg" width="180" /> |
 
 This repository does not contain GPUI itself. It is only the application layer
 (~1600 lines in `src/main.rs`), built and installed through
