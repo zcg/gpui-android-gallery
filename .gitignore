@@ -4,3 +4,5 @@
 /dist
 trunk-serve.log
 trunk-serve.log.err
+trunk.log
+trunk.err.log

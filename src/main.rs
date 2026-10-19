@@ -45,12 +45,26 @@ const ON_ACCENT: u32 = 0x11111b;
 // Entry point
 // ---------------------------------------------------------------------------
 
+/// Fallback glyphs the bundled fonts lack: CJK text, arrows, dashes, and the tab
+/// pictographs. Subset from Noto Sans SC down to the characters this UI uses, which
+/// keeps it at a few KB instead of shipping the 17 MB source font.
+const GALLERY_FALLBACK_FONT: &[u8] = include_bytes!("../assets/fonts/gallery-symbols.ttf");
+
 #[gpui_platform::main]
 fn main() {
     // Wasm needs its panic hook and logging installed before the app starts.
     #[cfg(target_family = "wasm")]
     gpui_platform::web_init();
     application().run(|cx: &mut App| {
+        // The web platform only ships IBM Plex Sans and Lilex, neither of which covers
+        // CJK or pictographs, so those render as tofu without this. Registering the
+        // subset on every platform keeps the text identical everywhere.
+        if let Err(error) = cx
+            .text_system()
+            .add_fonts(vec![std::borrow::Cow::Borrowed(GALLERY_FALLBACK_FONT)])
+        {
+            eprintln!("failed to add the fallback glyph font: {error:#}");
+        }
         uic::init(cx);
         cx.open_window(WindowOptions::default(), |window, cx| {
             cx.new(|cx| Gallery::new(window, cx))
