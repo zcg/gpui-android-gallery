@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-gpui = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui" }
-gpui_platform = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_platform" }
-gpui_effects = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_effects" }
-uic = { path = "D:/Projects/gpui/gpui-fusion/uic" }
+gpui = { git = "https://github.com/cradiy/gpui-fusion", package = "gpui" }
+gpui_platform = { git = "https://github.com/cradiy/gpui-fusion", package = "gpui_platform" }
+gpui_effects = { git = "https://github.com/cradiy/gpui-fusion", package = "gpui_effects" }
+uic = { git = "https://github.com/cradiy/gpui-fusion", package = "uic" }
 
 [target.'cfg(target_os = "android")'.dependencies]
-gpui_android = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_android" }
+gpui_android = { git = "https://github.com/cradiy/gpui-fusion", package = "gpui_android" }
 
 # ---------------------------------------------------------------------------
 # Profiles

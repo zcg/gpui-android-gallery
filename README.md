@@ -1,5 +1,13 @@
 # GPUI Android Gallery
 
+> **想上手玩一下？不用编译，直接下载现成的包：**
+>
+> - Android：[**gpui-gallery-android.apk**](https://github.com/zcg/gpui-android-gallery/releases/latest/download/gpui-gallery-android.apk)（通用包，arm64-v8a 和 x86_64 都在里面，真机与模拟器都能装）
+> - Windows：[**gpui-gallery-windows-x64.exe**](https://github.com/zcg/gpui-android-gallery/releases/latest/download/gpui-gallery-windows-x64.exe)（双击运行，无需安装）
+>
+> APK 用 Android debug 证书签名，安装时系统会提示“未知来源”，允许即可。
+> 所有历史版本见 [Releases](https://github.com/zcg/gpui-android-gallery/releases)。
+
 一个跑在 Android 上的 GPUI 组件展示应用。它把 [`gpui-fusion`](https://github.com/cradiy/gpui-fusion)
 里可用的控件和视觉效果集中到七个页面里，用来在真机上手感体验、对照渲染效果、观察帧率。
 
@@ -36,24 +44,17 @@ GPUI 在 Android 上的组件大多只能从文档里了解，改一行看一次
 - JDK 17 或更高
 - `gpuiforge`：`cargo install --path <gpuiforge 仓库>`
 
-### 第一步：准备 GPUI 依赖
+### 第一步：获取源码
 
-`Cargo.toml` 通过**本地路径**依赖 `gpui-fusion` 的 crate。clone 之后必须把路径改成你机器上的实际位置：
-
-```powershell
-# 先把 gpui-fusion 放到任意位置
-git clone https://github.com/cradiy/gpui-fusion.git D:\Projects\gpui\gpui-fusion
-
-# 再把本项目的路径依赖指向它（PowerShell）
-$root = 'D:\Projects\gpui\gpui-fusion'
-(Get-Content Cargo.toml) -replace 'D:/Projects/gpui/gpui-fusion', ($root -replace '\\','/') | Set-Content Cargo.toml
-```
+GPUI 依赖直接指向官方仓库，不需要额外配置：
 
 ```bash
-# 或者用 bash
-root=/path/to/gpui-fusion
-sed -i "s#D:/Projects/gpui/gpui-fusion#$root#g" Cargo.toml
+git clone https://github.com/zcg/gpui-android-gallery.git
+cd gpui-android-gallery
 ```
+
+首次构建时 Cargo 会自动拉取 [`gpui-fusion`](https://github.com/cradiy/gpui-fusion)。
+具体版本由随仓库提交的 `Cargo.lock` 固定；想跟进上游就执行 `cargo update`。
 
 `gpuiforge.json` 里的 `application-id` 也可以换成你自己的包名。
 
@@ -78,6 +79,9 @@ gpuiforge run android --release --device <serial>
 # 只构建某一个 ABI（默认跟随设备）
 gpuiforge build android --release --abi arm64-v8a
 gpuiforge build android --release --abi x86_64
+
+# 桌面版
+gpuiforge run desktop --release
 ```
 
 `gpuiforge` 会在 `target/gpuiforge/android/` 下生成 Gradle 工程，输出 APK 到
@@ -103,9 +107,9 @@ release 构建不会设置该标志，因此正常。如果你需要在 debug �
 
 ### 前提与已知限制
 
-- 只在 **Android** 上验证过。代码里有 `#[cfg(target_os = "android")]` 分支，
-  `gpui_platform` 也支持桌面，但本项目没有针对桌面做过适配。
-- 界面按手机竖屏设计，横屏下内容会被拉伸或裁切。
+- Android 与桌面都能运行（桌面不需要 `#[cfg(target_os = "android")]` 那部分代码）。
+  界面按手机竖屏设计，因此桌面窗口下排版会显得偏窄。
+- 手机横屏下内容会被拉伸或裁切。
 - 带玻璃效果的页面（Glass）在 120Hz 屏幕上通常比其它页面更容易掉帧：
   它同时存在三个 backdrop 模糊面板，每个面板都需要独立的渲染 pass。
   60Hz 下实测可以满帧。
@@ -186,21 +190,17 @@ zero — **scroll the page to read that page's real frame rate**.
 - JDK 17+
 - `gpuiforge`: `cargo install --path <gpuiforge checkout>`
 
-### Step 1: point the GPUI dependency at your checkout
+### Step 1: get the source
 
-`Cargo.toml` depends on `gpui-fusion` through a **local path**, so it has to be rewritten after
-cloning:
-
-```powershell
-git clone https://github.com/cradiy/gpui-fusion.git D:\Projects\gpui\gpui-fusion
-$root = 'D:\Projects\gpui\gpui-fusion'
-(Get-Content Cargo.toml) -replace 'D:/Projects/gpui/gpui-fusion', ($root -replace '\\','/') | Set-Content Cargo.toml
-```
+The GPUI dependency points at the upstream repository, so nothing needs to be configured:
 
 ```bash
-git clone https://github.com/cradiy/gpui-fusion.git /path/to/gpui-fusion
-sed -i "s#D:/Projects/gpui/gpui-fusion#/path/to/gpui-fusion#g" Cargo.toml
+git clone https://github.com/zcg/gpui-android-gallery.git
+cd gpui-android-gallery
 ```
+
+Cargo fetches [`gpui-fusion`](https://github.com/cradiy/gpui-fusion) on the first build. The
+exact revision is pinned by the committed `Cargo.lock`; run `cargo update` to follow upstream.
 
 You may also change `application-id` in `gpuiforge.json` to your own package name.
 
@@ -214,6 +214,8 @@ gpuiforge build android --release    # build only
 gpuiforge run android --release --device <serial>   # pick a device explicitly
 gpuiforge build android --release --abi arm64-v8a   # single ABI
 gpuiforge build android --release --abi x86_64
+
+gpuiforge run desktop --release                     # desktop build
 ```
 
 The generated Gradle project lands in `target/gpuiforge/android/`, and the APK in
@@ -238,9 +240,10 @@ the flag yourself on Android.
 
 ### Scope and known limits
 
-- Verified on **Android** only. The code has `#[cfg(target_os = "android")]` branches and
-  `gpui_platform` also targets desktop, but this project has not been adapted for desktop.
-- Laid out for a phone in portrait; landscape stretches or clips the content.
+- Runs on both Android and desktop; the desktop build simply omits the
+  `#[cfg(target_os = "android")]` code. The layout targets a phone in portrait, so it looks
+  narrow in a desktop window.
+- On a phone in landscape the content stretches or clips.
 - The Glass page is the first to drop frames on a 120Hz panel: three backdrop-blurred panels
   are on screen at once and each needs its own render passes. At 60Hz it holds a full frame.
 
