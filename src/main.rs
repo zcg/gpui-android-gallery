@@ -1,11 +1,15 @@
-//! An Android-first GPUI component gallery.
+//! A GPUI component gallery that runs on Android, desktop, and the web.
 //!
-//! Run with `gpuiforge run android`. Every section below exercises one family of
-//! GPUI / `uic` building blocks so the touch behaviour can be felt on device.
+//! Native: `gpuiforge run android` or `gpuiforge run desktop`.
+//! Web: `trunk serve` (see README).
 
 use gpui::{prelude::*, *};
 use gpui_effects::{FrostedGlass, FrostedGlassAppearance};
 use gpui_platform::application;
+#[cfg(target_family = "wasm")]
+use web_time::Instant;
+#[cfg(not(target_family = "wasm"))]
+use std::time::Instant;
 use uic::components::{
     badge::Badge,
     bottom_sheet::BottomSheet,
@@ -43,6 +47,9 @@ const ON_ACCENT: u32 = 0x11111b;
 
 #[gpui_platform::main]
 fn main() {
+    // Wasm needs its panic hook and logging installed before the app starts.
+    #[cfg(target_family = "wasm")]
+    gpui_platform::web_init();
     application().run(|cx: &mut App| {
         uic::init(cx);
         cx.open_window(WindowOptions::default(), |window, cx| {
@@ -161,7 +168,7 @@ struct Gallery {
 
     // Render-counter FPS. `render` is where a frame is built, so counting calls over a
     // one-second window reports how fast the app is actually producing frames.
-    frame_stamps: Vec<std::time::Instant>,
+    frame_stamps: Vec<Instant>,
     fps: f32,
 }
 
@@ -268,7 +275,7 @@ impl Gallery {
 
 impl Render for Gallery {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let now = std::time::Instant::now();
+        let now = Instant::now();
         self.frame_stamps.push(now);
         self.frame_stamps
             .retain(|t| now.duration_since(*t).as_secs_f32() < 1.0);

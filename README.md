@@ -8,7 +8,7 @@
 > APK 用 Android debug 证书签名，安装时系统会提示“未知来源”，允许即可。
 > 所有历史版本见 [Releases](https://github.com/zcg/gpui-android-gallery/releases)。
 
-一个跑在 Android 上的 GPUI 组件展示应用。它把 [`gpui-fusion`](https://github.com/cradiy/gpui-fusion)
+一个跑在 **Android、桌面和浏览器**上的 GPUI 组件展示应用。它把 [`gpui-fusion`](https://github.com/cradiy/gpui-fusion)
 里可用的控件和视觉效果集中到七个页面里，用来在真机上手感体验、对照渲染效果、观察帧率。
 
 ### 界面预览
@@ -99,6 +99,30 @@ gpuiforge run desktop --release
 `gpuiforge` 会在 `target/gpuiforge/android/` 下生成 Gradle 工程，输出 APK 到
 `target/gpuiforge/android/app/build/outputs/apk/<debug|release>/`。
 
+### 第三步（可选）：在浏览器里跑
+
+Web 版用 [Trunk](https://trunkrs.dev) 构建，需要 **nightly** Rust（WebAssembly 的共享内存需要 nightly 的
+`build-std` 与 atomics 标志，已写在 `.cargo/config.toml` 里，且只对 wasm 目标生效）：
+
+```powershell
+rustup toolchain install nightly
+rustup component add rust-src --toolchain nightly
+rustup target add wasm32-unknown-unknown --toolchain nightly
+cargo install trunk
+
+$env:RUSTUP_TOOLCHAIN = "nightly"
+cd <仓库目录>
+trunk serve --release      # http://127.0.0.1:8080/
+```
+
+注意两点：
+
+- 必须用 `--release`。debug 版的 wasm 约 **349 MB**，浏览器加载会卡死；release
+  经 `wasm-opt` 处理后约 **11 MB**。
+- 必须走 `trunk serve` 访问，不能直接双击 `dist/index.html`：WebAssembly 的共享内存
+  要求页面带上 `Cross-Origin-Embedder-Policy` / `Cross-Origin-Opener-Policy` 头，
+  这两个头已在 `Trunk.toml` 里配置，由 trunk 的服务器下发。
+
 ### 关于 debug 与 release
 
 **请用 `--release` 构建。**
@@ -119,7 +143,7 @@ release 构建不会设置该标志，因此正常。如果你需要在 debug �
 
 ### 前提与已知限制
 
-- Android 与桌面都能运行（桌面不需要 `#[cfg(target_os = "android")]` 那部分代码）。
+- Android、桌面、浏览器都能运行（三者的差异只在平台入口，界面代码是同一份）。
   界面按手机竖屏设计，因此桌面窗口下排版会显得偏窄。
 - 手机横屏下内容会被拉伸或裁切。
 - 带玻璃效果的页面（Glass）在 120Hz 屏幕上通常比其它页面更容易掉帧：
@@ -170,9 +194,9 @@ adb -s <serial> shell input tap <x> <y>
 
 ### What this is
 
-A GPUI component gallery that runs on Android. It gathers the widgets and visual effects
-available in [`gpui-fusion`](https://github.com/cradiy/gpui-fusion) into seven pages so the
-touch behaviour, rendering, and frame rate can be judged on a real device.
+A GPUI component gallery that runs on **Android, desktop, and the web**. It gathers the widgets
+and visual effects available in [`gpui-fusion`](https://github.com/cradiy/gpui-fusion) into seven
+pages so the touch behaviour, rendering, and frame rate can be judged on a real device.
 
 ### Screenshots
 
@@ -242,6 +266,31 @@ gpuiforge run desktop --release                     # desktop build
 The generated Gradle project lands in `target/gpuiforge/android/`, and the APK in
 `target/gpuiforge/android/app/build/outputs/apk/<debug|release>/`.
 
+### Step 3 (optional): run in a browser
+
+The web build uses [Trunk](https://trunkrs.dev) and needs **nightly** Rust: shared WebAssembly
+memory requires nightly's `build-std` plus the atomics flags, which live in `.cargo/config.toml`
+and are scoped to the wasm target only.
+
+```powershell
+rustup toolchain install nightly
+rustup component add rust-src --toolchain nightly
+rustup target add wasm32-unknown-unknown --toolchain nightly
+cargo install trunk
+
+$env:RUSTUP_TOOLCHAIN = "nightly"
+cd <checkout>
+trunk serve --release      # http://127.0.0.1:8080/
+```
+
+Two things worth knowing:
+
+- Use `--release`. A debug wasm is about **349 MB** and will stall the browser; the release
+  build goes through `wasm-opt` and lands at about **11 MB**.
+- Serve it through `trunk serve`; opening `dist/index.html` directly will not work. Shared
+  WebAssembly memory requires `Cross-Origin-Embedder-Policy` and `Cross-Origin-Opener-Policy`
+  headers, which `Trunk.toml` configures for Trunk's own server.
+
 ### Use release, not debug
 
 Upstream `gpui-fusion` enables wgpu's `DEBUG` instance flag in debug builds, which adds
@@ -261,9 +310,8 @@ the flag yourself on Android.
 
 ### Scope and known limits
 
-- Runs on both Android and desktop; the desktop build simply omits the
-  `#[cfg(target_os = "android")]` code. The layout targets a phone in portrait, so it looks
-  narrow in a desktop window.
+- Runs on Android, desktop, and the web; the three differ only in their platform entry point,
+  the UI code is the same.
 - On a phone in landscape the content stretches or clips.
 - The Glass page is the first to drop frames on a 120Hz panel: three backdrop-blurred panels
   are on screen at once and each needs its own render passes. At 60Hz it holds a full frame.

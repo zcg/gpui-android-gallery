@@ -1,3 +1,6 @@
 /target
 /gpuiforge-staging
 /.rpi
+/dist
+trunk-serve.log
+trunk-serve.log.err

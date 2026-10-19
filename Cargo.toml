@@ -12,6 +12,10 @@ uic = { git = "https://github.com/cradiy/gpui-fusion", package = "uic" }
 [target.'cfg(target_os = "android")'.dependencies]
 gpui_android = { git = "https://github.com/cradiy/gpui-fusion", package = "gpui_android" }
 
+# `std::time::Instant` panics on wasm32-unknown-unknown; web-time provides the same API.
+[target.'cfg(target_family = "wasm")'.dependencies]
+web-time = "1"
+
 # ---------------------------------------------------------------------------
 # Profiles
 #

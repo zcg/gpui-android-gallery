@@ -3147,6 +3147,7 @@ dependencies = [
  "gpui_effects",
  "gpui_platform",
  "uic",
+ "web-time",
 ]
 
 [[package]]

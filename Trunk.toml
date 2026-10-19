@@ -1,0 +1,7 @@
+[serve]
+addresses = ["127.0.0.1"]
+port = 8080
+open = false
+
+# Shared WebAssembly memory and background workers require cross-origin isolation.
+headers = { "Cross-Origin-Embedder-Policy" = "require-corp", "Cross-Origin-Opener-Policy" = "same-origin" }
