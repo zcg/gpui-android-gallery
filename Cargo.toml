@@ -1,0 +1,71 @@
+[package]
+name = "my-gpui-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpui = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui" }
+gpui_platform = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_platform" }
+gpui_effects = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_effects" }
+uic = { path = "D:/Projects/gpui/gpui-fusion/uic" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+gpui_android = { path = "D:/Projects/gpui/gpui-fusion/crates/gpui_android" }
+
+# ---------------------------------------------------------------------------
+# Profiles
+#
+# `my-gpui-app` is its own workspace root, so `[profile.*]` tables in
+# gpui-fusion/Cargo.toml do NOT apply here. Cargo only reads profiles from the
+# workspace root of the build. Without the package overrides below, a debug
+# build compiles gpui/gpui_wgpu/uic/cosmic-text at opt-level 0, which makes the
+# GPU UI noticeably janky on device. These mirror gpui-fusion's settings.
+# ---------------------------------------------------------------------------
+
+[profile.dev.package]
+# proc-macros
+gpui_macros = { opt-level = 3 }
+derive_refineable = { opt-level = 3 }
+util_macros = { opt-level = 3 }
+quote = { opt-level = 3 }
+syn = { opt-level = 3 }
+proc-macro2 = { opt-level = 3 }
+
+taffy = { opt-level = 3 }
+resvg = { opt-level = 3 }
+serde_json = { opt-level = 3 }
+# Text shaping and font fallback run on the input frame's critical path.
+cosmic-text = { opt-level = 3 }
+harfrust = { opt-level = 3 }
+skrifa = { opt-level = 3 }
+read-fonts = { opt-level = 3 }
+font-types = { opt-level = 3 }
+swash = { opt-level = 3 }
+fontdb = { opt-level = 3 }
+unicode-bidi = { opt-level = 3 }
+unicode-linebreak = { opt-level = 3 }
+unicode-segmentation = { opt-level = 3 }
+rangemap = { opt-level = 3 }
+smol_str = { opt-level = 3 }
+# UI interaction paths need modest optimization even in debug builds. This keeps
+# debug assertions and symbols while avoiding frame stalls in pointer-driven controls.
+gpui = { opt-level = 1 }
+gpui_platform = { opt-level = 1 }
+gpui_wgpu = { opt-level = 1 }
+gpui_render = { opt-level = 1 }
+gpui_effects = { opt-level = 1 }
+gpui_android = { opt-level = 1 }
+uic = { opt-level = 1 }
+# Shader/effect passes are per-pixel hot loops; never leave them unoptimized.
+wgpu = { opt-level = 2 }
+wgpu-core = { opt-level = 2 }
+wgpu-hal = { opt-level = 2 }
+naga = { opt-level = 2 }
+
+collections = { codegen-units = 1 }
+refineable = { codegen-units = 1 }
+
+[profile.release]
+debug = "limited"
+lto = "thin"
+codegen-units = 1

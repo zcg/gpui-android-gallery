@@ -1,0 +1,87 @@
+{
+  "$schema": "./gpuiforge.schema.json",
+  "app": {
+    "name": "my-gpui-app"
+  },
+  "platforms": {
+    "android": {
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "application-id": "com.example.myapp",
+      "build": [
+        {
+          "args": [
+            "gradle",
+            "--",
+            "--no-daemon",
+            "-PgpuiAbis={{abis}}",
+            "-PgpuiForgeExecutable={{tool_path}}",
+            ":app:assemble{{variant}}"
+          ],
+          "cwd": "{{project_dir}}",
+          "program": "{{tool_path}}"
+        }
+      ],
+      "features": [],
+      "inset-handling": "application",
+      "management": "managed",
+      "permissions": [],
+      "run": [
+        {
+          "args": [
+            "-s",
+            "{{device}}",
+            "install",
+            "-r",
+            "{{artifact}}"
+          ],
+          "program": "{{adb}}"
+        },
+        {
+          "args": [
+            "-s",
+            "{{device}}",
+            "shell",
+            "am",
+            "start",
+            "-W",
+            "-n",
+            "{{application_id}}/{{activity}}"
+          ],
+          "error-pattern": "Error:",
+          "program": "{{adb}}"
+        }
+      ]
+    },
+    "desktop": {
+      "build": [
+        {
+          "args": [
+            "build",
+            "-p",
+            "my-gpui-app",
+            "--profile",
+            "{{cargo_profile}}"
+          ],
+          "program": "cargo"
+        }
+      ],
+      "run": [
+        {
+          "args": [
+            "run",
+            "-p",
+            "my-gpui-app",
+            "--profile",
+            "{{cargo_profile}}"
+          ],
+          "program": "cargo"
+        }
+      ]
+    }
+  }
+}
+
+
