@@ -41,6 +41,7 @@ const RED: u32 = 0xf38ba8;
 const YELLOW: u32 = 0xf9e2af;
 const ON_ACCENT: u32 = 0x11111b;
 
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -55,7 +56,11 @@ fn main() {
     // Wasm needs its panic hook and logging installed before the app starts.
     #[cfg(target_family = "wasm")]
     gpui_platform::web_init();
-    application().run(|cx: &mut App| {
+    application()
+        // uic's built-in controls (segmented tabs, inputs, notifications) render
+        // Lucide SVGs; without an asset source they draw nothing at all.
+        .with_assets(uic::assets::LucideAssets::new())
+        .run(|cx: &mut App| {
         // The web platform only ships IBM Plex Sans and Lilex, neither of which covers
         // CJK or pictographs, so those render as tofu without this. Registering the
         // subset on every platform keeps the text identical everywhere.
@@ -72,7 +77,6 @@ fn main() {
         .unwrap();
     });
 }
-
 // ---------------------------------------------------------------------------
 // Section model
 // ---------------------------------------------------------------------------
@@ -86,10 +90,11 @@ enum Page {
     Overlays,
     Feedback,
     Data,
+    Icons,
 }
 
 impl Page {
-    const ALL: [Page; 7] = [
+    const ALL: [Page; 8] = [
         Page::Basics,
         Page::Inputs,
         Page::Controls,
@@ -97,6 +102,7 @@ impl Page {
         Page::Overlays,
         Page::Feedback,
         Page::Data,
+        Page::Icons,
     ];
 
     fn label(self) -> &'static str {
@@ -108,6 +114,7 @@ impl Page {
             Page::Overlays => "Overlays",
             Page::Feedback => "Feedback",
             Page::Data => "Data",
+            Page::Icons => "Icons",
         }
     }
 
@@ -120,6 +127,7 @@ impl Page {
             Page::Overlays => "▤",
             Page::Feedback => "!",
             Page::Data => "☰",
+            Page::Icons => "✱",
         }
     }
 }
@@ -149,6 +157,11 @@ impl Flavor {
 struct Gallery {
     page: Page,
     scroll: ScrollHandle,
+
+    /// Every SVG `LucideAssets` embeds, resolved once at startup. The generated
+    /// `LucideIcons` enum is not iterable, so the asset source is the only way to
+    /// enumerate the set.
+    icons: Vec<SharedString>,
 
     // Controls
     check_a: bool,
@@ -188,6 +201,10 @@ struct Gallery {
 
 impl Gallery {
     fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let icons = cx
+            .asset_source()
+            .list("icons/")
+            .unwrap_or_default();
         let volume = cx.new(|cx| SliderState::new(0.6, 0.0..=1.0, cx).step(0.05));
 
         let volume_subscription = cx.subscribe(&volume, |this, _, event: &SliderEvent, cx| {
@@ -244,6 +261,7 @@ impl Gallery {
         Self {
             page: Page::Basics,
             scroll: ScrollHandle::new(),
+            icons,
             check_a: true,
             check_b: false,
             switch_a: false,
@@ -322,6 +340,7 @@ impl Render for Gallery {
                         Page::Overlays => self.page_overlays(cx).into_any_element(),
                         Page::Feedback => self.page_feedback(cx).into_any_element(),
                         Page::Data => self.page_data(cx).into_any_element(),
+                        Page::Icons => self.page_icons(cx).into_any_element(),
                     }),
             )
             .child(self.bottom_bar(cx))
@@ -394,6 +413,7 @@ impl Gallery {
                     .tab(Page::Overlays, div().child("Overlays"))
                     .tab(Page::Feedback, div().child("Feedback"))
                     .tab(Page::Data, div().child("Data"))
+                    .tab(Page::Icons, div().child("Icons"))
                     .on_change({
                         let entity = entity.clone();
                         move |page, _, cx| {
@@ -1176,6 +1196,61 @@ impl Gallery {
                                         });
                                     }),
                             ),
+                    ),
+            ))
+    }
+
+    // -- Icons -------------------------------------------------------------
+
+    fn page_icons(&mut self, _cx: &mut Context<Self>) -> impl IntoElement {
+        let count = self.icons.len();
+        div()
+            .flex()
+            .flex_col()
+            .gap_4()
+            .child(self.section(
+                "Lucide icons",
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap_3()
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(rgb(MUTED))
+                            .child(format!(
+                                "All {count} SVGs uic embeds. These only render because main() registers LucideAssets as the asset source; without it they are invisible."
+                            )),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_wrap()
+                            .gap_3()
+                            .children(self.icons.iter().map(|path| {
+                                let name = path
+                                    .strip_prefix("icons/")
+                                    .unwrap_or(path)
+                                    .trim_end_matches(".svg");
+                                div()
+                                    .w(px(76.))
+                                    .flex()
+                                    .flex_col()
+                                    .items_center()
+                                    .gap_1()
+                                    .child(
+                                        svg()
+                                            .path(path.clone())
+                                            .size(px(22.))
+                                            .text_color(rgb(ACCENT)),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(MUTED))
+                                            .child(name.to_string()),
+                                    )
+                            })),
                     ),
             ))
     }
